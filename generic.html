@@ -1,119 +1,244 @@
 <!DOCTYPE HTML>
-<!--
-	Cysafe Portal
--->
 <html>
-	<head>
-		<title>Cysafe Portal</title>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-		<meta name="description" content="" />
-		<meta name="keywords" content="" />
-		<link rel="stylesheet" href="assets/css/main.css" />
-	</head>
-	<body class="is-preload">
+<head>
+    <title>Cysafe Portal – Know it All</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="assets/css/main.css" />
 
-		<!-- Header -->
-			<header id="header">
-				<a class="logo" href="index.html">Cysafe Portal</a>
-				<nav>
-					<a href="#menu">Menu</a>
-				</nav>
-			</header>
+    <!-- Extra styling for UI improvements -->
+    <style>
+        /* Smooth fade animation */
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 1.2s forwards;
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
 
-		<!-- Nav -->
-			<nav id="menu">
-				<ul class="links">
-					<li><a href="index.html">Home</a></li>
-					<li><a href="elements.html">Report Scam</a></li> 
-					<li><a href="generic.html">Know it All</a></li>
-				</ul>
-			</nav>
+        /* Slide animation */
+        .slide-up {
+            opacity: 0;
+            transform: translateY(25px);
+            animation: slideUp 1.1s forwards;
+        }
+        @keyframes slideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-		<!-- Heading -->
-			<div id="heading" >
-				<h1>Know it All</h1>
-			</div>
+        /* Hero Banner */
+        #heading {
+            background: linear-gradient(120deg, #004aad, #0078ff, #00c6ff);
+            background-size: 300% 300%;
+            animation: gradientMove 7s ease infinite;
+            padding: 4rem 2rem;
+            text-align: center;
+            color: white;
+        }
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
 
-		<!-- Main -->
-			<section id="main" class="wrapper">
-				<div class="inner">
-					<div class="content">
-						<header>
-							<h2>Phishing Patterns</h2>
-						</header>
-						<p>Phishing is a type of social engineering attack where criminals impersonate 
-						trusted people or services to trick victims into revealing credentials, clicking 
-						malicious links, or sending money.</p>
-						
-						<p>  A "phishing pattern" refers to the recurring techniques attackers use. Such as 
-						spoofed sender addresses, urgent or fear-based wording, malicious attachments or fake login pages, 
-						URL obfuscation (Punycode/shorteners), and multi-channel follow ups (email → SMS → phone). Recognizing 
-						the patterns of mismatched senders, unexpected requests, poor grammar, and requests for credentials or 
-						payments helps users and defenders spot and stop phishing before it succeeds.</p>
-						<hr />
-						
-						
-						<h3>1. Fake Login Pages</h3>
-						<p>Scammers build websites that look identical to real services like banks or shopping sites. 
-							Their goal is to steal your username and password. Always double-check the URL, as phishing pages often contain strange spellings or extra words.</p>
+        #heading h1 {
+            font-size: 3rem;
+            font-weight: 800;
+        }
 
-						<h3>2. Urgent Action Scams</h3>
-						<p>Phishing messages often try to scare you with warnings like “Your account will be closed” or “Unusual activity detected.” 
-						 These pressure tactics are meant to make you click without thinking. Real companies rarely force instant action.</p>
+        /* Card layout for phishing patterns */
+        .pattern-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 20px;
+            margin: 25px 0;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            transition: transform .25s ease, box-shadow .25s ease;
+        }
 
-						<h3>3. Suspicious Attachments</h3>
-						<p>Attackers may send attachments disguised as invoices, receipts, or important documents. Opening them can install malware. 
-							If you weren’t expecting a file, don’t open it and contact the sender using a verified method first.</p>
+        .pattern-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
 
-						<h3>4. Prize or Reward Scams</h3>
-						<p>If you receive a message claiming you won a prize you never entered for, it’s almost always fake. 
-							These scams try to get your personal information or lead you to malicious sites. Legitimate companies don’t ask for sensitive info to claim a prize.</p>
+        .pattern-card img {
+            width: 130px;
+            height: 130px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
 
-						<h3>5. Impersonation of Trusted Brands</h3>
-						<p>Phishers often pretend to be popular companies, delivery services, or banks by copying their logos and design. 
-							Even if the message looks real, always check the sender’s email address and the website domain for small but suspicious differences.</p>
+        .pattern-card h3 {
+            margin-top: 0;
+        }
 
-					</div>
-				</div>
-			</section>
+        /* Icons section */
+        .icon-banner {
+            display: flex;
+            gap: 25px;
+            margin-top: 20px;
+            justify-content: center;
+        }
 
-		<!-- Footer -->
-			<footer id="footer">
-				<div class="inner">
-					<div class="content">
-						<section>
-							<h3>About Us</h3>
-							<p>We’re a student team dedicated to exploring cybersecurity and building practical tools that help people stay safe online. 
-								CyberSafe Portal began as a simple idea, create a place where anyone can submit suspicious links and quickly understand potential risks.
-								 By combining basic AI with clear, accessible design, we aim to make online security less confusing and more approachable. 
-								 Our goal is to support digital awareness, encourage safer browsing habits, and offer a small but meaningful contribution to a safer internet for everyone.</p>
-						</section>
-						<section>
-							
-						</section>
-						<section>
-							<h4>Our Social Medias</h4>
-							<ul class="plain">
-								<li><a href="#"><i class="icon fa-twitter">&nbsp;</i>Twitter</a></li>
-								<li><a href="#"><i class="icon fa-facebook">&nbsp;</i>Facebook</a></li>
-								<li><a href="#"><i class="icon fa-instagram">&nbsp;</i>Instagram</a></li>
-								<li><a href="https://github.com/Cysafe-Inc/Cysafe-Portal"><i class="icon fa-github">&nbsp;</i>Github</a></li>
-							</ul>
-						</section>
-					</div>
-					<div class="copyright">
-						&copy; Cysafe Portal Nelsi Valdovinos | Brandon Solorio
-					</div>
-				</div>
-			</footer>
+        .icon-banner img {
+            width: 70px;
+        }
 
-		<!-- Scripts -->
-			<script src="assets/js/jquery.min.js"></script>
-			<script src="assets/js/browser.min.js"></script>
-			<script src="assets/js/breakpoints.min.js"></script>
-			<script src="assets/js/util.js"></script>
-			<script src="assets/js/main.js"></script>
+        /* Divider */
+        .section-divider {
+            border-top: 2px solid #ddd;
+            margin: 3rem 0;
+        }
+    </style>
+</head>
 
-	</body>
+<body class="is-preload">
+
+    <!-- HEADER -->
+    <header id="header">
+        <a class="logo" href="index.html">Cysafe Portal</a>
+        <nav><a href="#menu">Menu</a></nav>
+    </header>
+
+    <!-- NAV MENU -->
+    <nav id="menu">
+        <ul class="links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="elements.html">Report Scam</a></li>
+            <li><a href="generic.html">Know it All</a></li>
+        </ul>
+    </nav>
+
+    <!-- ANIMATED HERO -->
+    <div id="heading">
+        <h1 class="slide-up">Know It All</h1>
+        <p class="fade-in">Understand phishing patterns and protect yourself online</p>
+
+        <div class="icon-banner fade-in">
+            <img src="assets/images/shield.png" alt="Shield Icon">
+            <img src="assets/images/warning.png" alt="Warning Icon">
+            <img src="assets/images/lock.png" alt="Lock Icon">
+        </div>
+    </div>
+
+    <!-- MAIN SECTION -->
+    <section id="main" class="wrapper fade-in">
+        <div class="inner">
+            <div class="content">
+
+                <header class="slide-up">
+                    <h2>Phishing Patterns (Visual Guide)</h2>
+                </header>
+
+                <p class="slide-up">
+                    Phishing attacks rely on tricking people into clicking, trusting, or revealing information.  
+                    Understanding the visual patterns helps you identify threats faster.
+                </p>
+
+                <div class="section-divider"></div>
+
+                <!-- CARD 1 -->
+                <div class="pattern-card slide-up">
+                    <img src="assets/images/fake-login.jpg" alt="Fake login page">
+                    <div>
+                        <h3>1. Fake Login Pages</h3>
+                        <p>
+                            Scammers recreate real login screens to steal your credentials.  
+                            Always verify the URL — small changes or extra characters are common red flags.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- CARD 2 -->
+                <div class="pattern-card slide-up">
+                    <img src="assets/images/urgent-email.jpg" alt="Urgent scam email">
+                    <div>
+                        <h3>2. Urgent Action Scams</h3>
+                        <p>
+                            Attackers use fear: “Your account will be closed!” or “Suspicious activity detected!”  
+                            These messages pressure you into acting without thinking.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- CARD 3 -->
+                <div class="pattern-card slide-up">
+                    <img src="assets/images/attachment-scam.jpg" alt="Suspicious email attachment">
+                    <div>
+                        <h3>3. Suspicious Attachments</h3>
+                        <p>
+                            Attachments disguised as invoices or receipts may contain malware.  
+                            If you weren’t expecting a file — don’t open it.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- CARD 4 -->
+                <div class="pattern-card slide-up">
+                    <img src="assets/images/prize-scam.jpg" alt="Prize scam">
+                    <div>
+                        <h3>4. Prize / Reward Scams</h3>
+                        <p>
+                            “You won!” scams try to harvest your personal info.  
+                            Real companies don’t ask for private details to claim a prize.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- CARD 5 -->
+                <div class="pattern-card slide-up">
+                    <img src="assets/images/brand-spoof.jpg" alt="Brand impersonation">
+                    <div>
+                        <h3>5. Impersonation of Trusted Brands</h3>
+                        <p>
+                            Phishers use copied logos and design to appear legitimate.  
+                            Always inspect the sender’s email and the domain they link to.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer id="footer">
+        <div class="inner">
+            <div class="content">
+                <section>
+                    <h3>About Us</h3>
+                    <p>We’re a student team focused on building a safer online community through awareness and tools.</p>
+                </section>
+                <section></section>
+                <section>
+                    <h4>Our Social Medias</h4>
+                    <ul class="plain">
+                        <li><a href="#"><i class="icon fa-twitter"></i>Twitter</a></li>
+                        <li><a href="#"><i class="icon fa-facebook"></i>Facebook</a></li>
+                        <li><a href="#"><i class="icon fa-instagram"></i>Instagram</a></li>
+                        <li><a href="https://github.com/Cysafe-Inc/Cysafe-Portal"><i class="icon fa-github"></i>Github</a></li>
+                    </ul>
+                </section>
+            </div>
+            <div class="copyright">
+                &copy; Cysafe Portal – Nelsi Valdovinos | Brandon Solorio
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/browser.min.js"></script>
+    <script src="assets/js/breakpoints.min.js"></script>
+    <script src="assets/js/util.js"></script>
+    <script src="assets/js/main.js"></script>
+
+</body>
 </html>
