@@ -1,6 +1,7 @@
 @import url(font-awesome.min.css);
 @import url("https://fonts.googleapis.com/css?family=Raleway:200,300,400,500,600");
 
+
 @-ms-viewport {
   width: device-width; }
 body {
@@ -1806,7 +1807,7 @@ ul.icons {
   -webkit-justify-content: center;
   -ms-justify-content: center;
   justify-content: center;
-  background-image: url("../../images/fishing.jpg");
+  background-image: url("../../images/banner.jpg");
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
