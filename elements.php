@@ -15,31 +15,138 @@ $db->exec("CREATE TABLE IF NOT EXISTS scam_reports (
     date_submitted TEXT NOT NULL
 )");
 
-// Handle form submission
+// --------------------
+// LINK CHECKER (GEMINI)
+// --------------------
+$link_check_result = "";
+
+if (isset($_POST['check_link'])) {
+
+    $url_to_check = $_POST['check_url'];
+
+    $api_key = "YOUR_GEMINI_API_KEY"; 
+
+    $payload = [
+        "model" => "gemini-1.5-flash",
+        "input" => "Analyze this URL for safety and tell me if it's possibly a scam: $url_to_check"
+    ];
+
+    $curl = curl_init();
+    curl_setopt_array($curl, [
+        CURLOPT_URL => "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=".$api_key,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_HTTPHEADER => ["Content-Type: application/json"],
+        CURLOPT_POSTFIELDS => json_encode($payload)
+    ]);
+
+    $response = curl_exec($curl);
+    curl_close($curl);
+
+    $json = json_decode($response, true);
+    $link_check_result = $json["candidates"][0]["content"]["parts"][0]["text"] ?? "AI could not analyze this link.";
+}
+
+// ------------------------
+//  Gemini link checker
+// ------------------------
+$link_check_result = "";
+$link_check_error  = "";
+
+function check_link_with_gemini($url) {
+    // 👉 Put your real Gemini API key here
+    $apiKey = 'YOUR_GEMINI_API_KEY_HERE';
+
+    // Simple prompt for the model
+    $prompt = "You are a cybersecurity assistant. "
+            . "Analyze this URL and classify it as either 'Likely safe', 'Suspicious', or 'Likely malicious'. "
+            . "Explain briefly why in simple language. URL: " . $url;
+
+    $endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . $apiKey;
+
+    $payload = [
+        "contents" => [
+            [
+                "parts" => [
+                    ["text" => $prompt]
+                ]
+            ]
+        ]
+    ];
+
+    $ch = curl_init($endpoint);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+
+    $response = curl_exec($ch);
+
+    if ($response === false) {
+        $error = curl_error($ch);
+        curl_close($ch);
+        return ["error" => "cURL error: " . $error];
+    }
+
+    curl_close($ch);
+
+    $data = json_decode($response, true);
+
+    if (!isset($data['candidates'][0]['content']['parts'][0]['text'])) {
+        return ["error" => "Unexpected response from Gemini API."];
+    }
+
+    $text = $data['candidates'][0]['content']['parts'][0]['text'];
+    return ["result" => $text];
+}
+
+// ------------------------
+//  Handle form submissions
+// ------------------------
 $success_message = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // We use a hidden field to know which form was submitted
+    $form_type = $_POST['form_type'] ?? '';
 
-    $scam_url      = $_POST['scam_url'];
-    $scam_type     = $_POST['scam_type'];
-    $how_received  = $_POST['how_received'];
-    $details       = $_POST['details'];
-    $contact_email = $_POST['contact_email'];
-    $date          = date("Y-m-d H:i:s");
+    if ($form_type === 'report_scam') {
+        // ---- Existing scam report form ----
+        $scam_url      = $_POST['scam_url'];
+        $scam_type     = $_POST['scam_type'];
+        $how_received  = $_POST['how_received'];
+        $details       = $_POST['details'];
+        $contact_email = $_POST['contact_email'];
+        $date          = date("Y-m-d H:i:s");
 
-    $stmt = $db->prepare("INSERT INTO scam_reports
-        (scam_url, scam_type, how_received, details, contact_email, date_submitted)
-        VALUES (:url, :type, :received, :details, :email, :date)");
+        $stmt = $db->prepare("INSERT INTO scam_reports
+            (scam_url, scam_type, how_received, details, contact_email, date_submitted)
+            VALUES (:url, :type, :received, :details, :email, :date)");
 
-    $stmt->bindValue(':url',      $scam_url,     SQLITE3_TEXT);
-    $stmt->bindValue(':type',     $scam_type,    SQLITE3_TEXT);
-    $stmt->bindValue(':received', $how_received, SQLITE3_TEXT);
-    $stmt->bindValue(':details',  $details,      SQLITE3_TEXT);
-    $stmt->bindValue(':email',    $contact_email,SQLITE3_TEXT);
-    $stmt->bindValue(':date',     $date,        SQLITE3_TEXT);
+        $stmt->bindValue(':url',      $scam_url,      SQLITE3_TEXT);
+        $stmt->bindValue(':type',     $scam_type,     SQLITE3_TEXT);
+        $stmt->bindValue(':received', $how_received,  SQLITE3_TEXT);
+        $stmt->bindValue(':details',  $details,       SQLITE3_TEXT);
+        $stmt->bindValue(':email',    $contact_email, SQLITE3_TEXT);
+        $stmt->bindValue(':date',     $date,          SQLITE3_TEXT);
 
-    $stmt->execute();
-    $success_message = "Your scam report has been submitted!";
+        $stmt->execute();
+        $success_message = "Your scam report has been submitted!";
+
+    } elseif ($form_type === 'link_check') {
+        // ---- New link checker form ----
+        $check_url = trim($_POST['check_url'] ?? '');
+
+        if ($check_url === '') {
+            $link_check_error = "Please paste a URL to check.";
+        } else {
+            $res = check_link_with_gemini($check_url);
+            if (isset($res['error'])) {
+                $link_check_error = $res['error'];
+            } else {
+                $link_check_result = $res['result'];
+            }
+        }
+    }
 }
 
 // Fetch all reports for the table
@@ -90,41 +197,71 @@ $results = $db->query("SELECT * FROM scam_reports ORDER BY id DESC");
                 <div class="content">
                     <div class="row">
 
-                        <!-- LEFT COLUMN: Info / Resources -->
+                       <!-- LEFT COLUMN: Info / Resources -->
+<div class="col-6 col-12-medium">
+
+    <!-- EXISTING INFO CARD -->
+    <div class="cysafe-card cysafe-card--info">
+        <h3>How CySafe Helps You</h3>
+        <p>Our goal is to make online safety simple. This page lets you report scams and learn how to recognize common phishing patterns so you can protect yourself and others.</p>
+
+        <h4>Quick Safety Checklist</h4>
+        <ul class="cysafe-list">
+            <li>Always check the full URL before entering any password.</li>
+            <li>Be suspicious of “urgent” messages demanding immediate action.</li>
+            <li>Never download unexpected attachments from unknown senders.</li>
+            <li>When in doubt, contact the company directly using an official site.</li>
+        </ul>
+
+        <h4>Key Terms</h4>
+        <dl class="cysafe-definitions">
+            <dt>Phishing</dt>
+            <dd>Scams that pretend to be trusted services to steal your passwords or personal information.</dd>
+
+            <dt>Malicious Link</dt>
+            <dd>A link designed to send you to a fake site, install malware, or trick you into sharing sensitive data.</dd>
+
+            <dt>Smishing / Vishing</dt>
+            <dd>Scams sent by text message (smishing) or phone call/voicemail (vishing) to pressure you into acting quickly.</dd>
+        </dl>
+
+        <div class="cysafe-tip">
+            <span class="cysafe-tip-label">Tip</span>
+            <p>If a message makes you feel rushed, anxious, or scared, pause. Scammers rely on emotion to override your judgment.</p>
+        </div>
+    </div>
+
+    <!-- NEW LINK CHECKER CARD (BOTTOM LEFT) -->
+    <div class="cysafe-card cysafe-card--info" style="margin-top: 25px;">
+        <h3 class="cysafe-card-title">
+            🔍 Link Checker
+        </h3>
+        <p>Paste a link to check if it may be dangerous using Google Gemini AI.</p>
+
+        <form method="POST" action="elements.php">
+            <input type="hidden" name="check_link" value="1">
+
+            <label for="check_url">Enter URL</label>
+            <input type="text" name="check_url" id="check_url" placeholder="https://example.com" required />
+
+            <ul class="actions">
+                <li><input type="submit" value="Check Link" class="button primary" /></li>
+            </ul>
+        </form>
+
+        <?php if (!empty($link_check_result)): ?>
+            <div style="background:#eef7ff; padding:10px; margin-top:10px; border-radius:8px;">
+                <strong>AI Result:</strong>
+                <p><?= nl2br(htmlspecialchars($link_check_result)) ?></p>
+            </div>
+        <?php endif; ?>
+    </div>
+
+</div>
+
+                        <!-- RIGHT COLUMN: Link Checker + Report Scam + Table -->
                         <div class="col-6 col-12-medium">
-                            <div class="cysafe-card cysafe-card--info">
-                                <h3>How CySafe Helps You</h3>
-                                <p>Our goal is to make online safety simple. This page lets you report scams and learn how to recognize common phishing patterns so you can protect yourself and others.</p>
 
-                                <h4>Quick Safety Checklist</h4>
-                                <ul class="cysafe-list">
-                                    <li>Always check the full URL before entering any password.</li>
-                                    <li>Be suspicious of “urgent” messages demanding immediate action.</li>
-                                    <li>Never download unexpected attachments from unknown senders.</li>
-                                    <li>When in doubt, contact the company directly using an official site.</li>
-                                </ul>
-
-                                <h4>Key Terms</h4>
-                                <dl class="cysafe-definitions">
-                                    <dt>Phishing</dt>
-                                    <dd>Scams that pretend to be trusted services to steal your passwords or personal information.</dd>
-
-                                    <dt>Malicious Link</dt>
-                                    <dd>A link designed to send you to a fake site, install malware, or trick you into sharing sensitive data.</dd>
-
-                                    <dt>Smishing / Vishing</dt>
-                                    <dd>Scams sent by text message (smishing) or phone call/voicemail (vishing) to pressure you into acting quickly.</dd>
-                                </dl>
-
-                                <div class="cysafe-tip">
-                                    <span class="cysafe-tip-label">Tip</span>
-                                    <p>If a message makes you feel rushed, anxious, or scared, pause. Scammers rely on emotion to override your judgment.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- RIGHT COLUMN: Report Scam + Latest Scams -->
-                        <div class="col-6 col-12-medium">
 
                             <!-- REPORT SCAM CARD -->
                             <div class="cysafe-card cysafe-card--form">
@@ -135,13 +272,14 @@ $results = $db->query("SELECT * FROM scam_reports ORDER BY id DESC");
                                 <p>Use this form to report suspicious links, emails, or messages. Your report helps raise awareness for other users.</p>
 
                                 <?php if (!empty($success_message)): ?>
-                                    <p class="cysafe-note" style="background:#050A12cc; border-radius:8px; padding:10px; margin-bottom:15px;">
+                                    <p class="cysafe-note" style="background:#daf5d7; border-radius:8px; padding:10px; margin-bottom:15px;">
                                         ✅ <?php echo htmlspecialchars($success_message); ?>
                                     </p>
                                 <?php endif; ?>
 
                                 <!-- Form posts back to this same file -->
                                 <form method="post" action="elements.php" class="cysafe-form">
+                                    <input type="hidden" name="form_type" value="report_scam" />
                                     <div class="row gtr-uniform">
                                         <div class="col-12">
                                             <label for="scam_url">Suspicious Link or Sender</label>
@@ -209,6 +347,9 @@ $results = $db->query("SELECT * FROM scam_reports ORDER BY id DESC");
                                             <tr>
                                                 <th>Scam Link / Sender</th>
                                                 <th>Type</th>
+                                                <th>How Received</th>
+                                                <th>Details</th>
+                                                <th>Contact Email</th>
                                                 <th>Reported</th>
                                             </tr>
                                         </thead>
@@ -217,6 +358,9 @@ $results = $db->query("SELECT * FROM scam_reports ORDER BY id DESC");
                                                 <tr>
                                                     <td><?php echo htmlspecialchars($row['scam_url']); ?></td>
                                                     <td><?php echo htmlspecialchars($row['scam_type']); ?></td>
+                                                    <td><?php echo htmlspecialchars($row['how_received']); ?></td>
+                                                    <td><?php echo nl2br(htmlspecialchars($row['details'])); ?></td>
+                                                    <td><?php echo htmlspecialchars($row['contact_email']); ?></td>
                                                     <td><?php echo htmlspecialchars($row['date_submitted']); ?></td>
                                                 </tr>
                                             <?php endwhile; ?>
