@@ -232,7 +232,7 @@ $results = $db->query("SELECT * FROM scam_reports ORDER BY id DESC");
     </div>
 
     <!-- NEW LINK CHECKER CARD (BOTTOM LEFT) -->
-    <div class="cysafe-card cysafe-card--info" style="margin-top: 25px;">
+    <div class="cysafe-card cysafe-card--info" style="margin-top: 25px;" id="link-checker">
         <h3 class="cysafe-card-title">
             🔍 Link Checker
         </h3>
