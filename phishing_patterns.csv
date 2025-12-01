@@ -1,0 +1,8 @@
+Category,RegexPattern,Action
+UrgencyKeyword,account|suspend|frozen|warning|verify|security|urgent|immediate,Suspicious
+FinancialKeyword,billing|invoice|payment|refund|transaction|tax|irs|hsa|crypto,Suspicious
+Shortener,bit\.ly|tinyurl\.com|goo\.gl|cutt\.ly,Suspicious
+TypoSquatting,"[a-z0-9]([a-z0-9\\-]*[a-z0-9])?\.co$",Malicious
+DomainKeyword,login|signin|clientportal|verify,Suspicious
+DoubleDomain,paypal\.com-\.net|apple\.com-id\.net,Malicious
+ForeignChar,xn--[a-zA-Z0-9]+,Malicious
