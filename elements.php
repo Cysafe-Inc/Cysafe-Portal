@@ -260,7 +260,7 @@ $results = $db->query("SELECT * FROM scam_reports ORDER BY id DESC");
                                 <p>Use this form to report suspicious links, emails, or messages. Your report helps raise awareness for other users.</p>
 
                                 <?php if (!empty($success_message)): ?>
-                                    <p class="cysafe-note" style="background:#daf5d7; border-radius:8px; padding:10px; margin-bottom:15px;">
+                                    <p class="cysafe-note" style="background:#050A12cc; border-radius:8px; padding:10px; margin-bottom:15px;">
                                         ✅ <?php echo htmlspecialchars($success_message); ?>
                                     </p>
                                 <?php endif; ?>
@@ -405,3 +405,4 @@ $results = $db->query("SELECT * FROM scam_reports ORDER BY id DESC");
 
     </body>
 </html>
+
