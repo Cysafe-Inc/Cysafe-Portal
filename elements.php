@@ -15,90 +15,76 @@ $db->exec("CREATE TABLE IF NOT EXISTS scam_reports (
     date_submitted TEXT NOT NULL
 )");
 
-// --------------------
-// LINK CHECKER (GEMINI)
-// --------------------
-$link_check_result = "";
-
-if (isset($_POST['check_link'])) {
-
-    $url_to_check = $_POST['check_url'];
-
-    $api_key = "YOUR_GEMINI_API_KEY"; 
-
-    $payload = [
-        "model" => "gemini-1.5-flash",
-        "input" => "Analyze this URL for safety and tell me if it's possibly a scam: $url_to_check"
-    ];
-
-    $curl = curl_init();
-    curl_setopt_array($curl, [
-        CURLOPT_URL => "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=".$api_key,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => true,
-        CURLOPT_HTTPHEADER => ["Content-Type: application/json"],
-        CURLOPT_POSTFIELDS => json_encode($payload)
-    ]);
-
-    $response = curl_exec($curl);
-    curl_close($curl);
-
-    $json = json_decode($response, true);
-    $link_check_result = $json["candidates"][0]["content"]["parts"][0]["text"] ?? "AI could not analyze this link.";
-}
-
 // ------------------------
-//  Gemini link checker
+//  CSV/Regex Link Checker (Simulated AI)
 // ------------------------
 $link_check_result = "";
 $link_check_error  = "";
 
-function check_link_with_gemini($url) {
-    // 👉 Put your real Gemini API key here
-    $apiKey = 'YOUR_GEMINI_API_KEY_HERE';
+function check_link_with_csv($url) {
+    // Path to your CSV file
+    $csv_file = 'phishing_patterns.csv';
+    $results = [];
+    $is_malicious = false;
 
-    // Simple prompt for the model
-    $prompt = "You are a cybersecurity assistant. "
-            . "Analyze this URL and classify it as either 'Likely safe', 'Suspicious', or 'Likely malicious'. "
-            . "Explain briefly why in simple language. URL: " . $url;
-
-    $endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . $apiKey;
-
-    $payload = [
-        "contents" => [
-            [
-                "parts" => [
-                    ["text" => $prompt]
-                ]
-            ]
-        ]
-    ];
-
-    $ch = curl_init($endpoint);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-
-    $response = curl_exec($ch);
-
-    if ($response === false) {
-        $error = curl_error($ch);
-        curl_close($ch);
-        return ["error" => "cURL error: " . $error];
+    if (!file_exists($csv_file)) {
+        return ["error" => "Error: Pattern file not found at " . $csv_file . ". Please ensure the file exists."];
     }
 
-    curl_close($ch);
+    // Attempt to open the CSV file
+    if (($handle = fopen($csv_file, "r")) !== FALSE) {
+        
+        // Skip header row
+        fgetcsv($handle); 
 
-    $data = json_decode($response, true);
+        // Read pattern rows
+        while (($data = fgetcsv($handle)) !== FALSE) {
+            
+            // Ensure the row has enough columns
+            if (count($data) < 3) continue;
 
-    if (!isset($data['candidates'][0]['content']['parts'][0]['text'])) {
-        return ["error" => "Unexpected response from Gemini API."];
+            // Extract data: data[0]=Category, data[1]=RegexPattern, data[2]=Action
+            $category = $data[0] ?? 'Unknown';
+            $pattern = trim($data[1]) ?? '';
+            $action = $data[2] ?? 'Suspicious';
+
+            // Check if the URL matches the pattern
+            // The 'i' modifier makes the match case-insensitive
+            if ($pattern && preg_match('/' . $pattern . '/i', $url)) {
+                $results[] = "- Matched **" . $category . "** (Action: " . $action . ").";
+                
+                // If any pattern is marked 'Malicious', flag the whole link
+                if (strtolower($action) === 'malicious') {
+                    $is_malicious = true;
+                }
+            }
+        }
+        fclose($handle);
+    } else {
+        return ["error" => "Error: Could not open the pattern file."];
     }
 
-    $text = $data['candidates'][0]['content']['parts'][0]['text'];
-    return ["result" => $text];
+    // --- Generate Final Classification ---
+    if ($is_malicious) {
+        $classification = "CLASSIFICATION: LIKELY MALICIOUS 🔴";
+        $summary = "This link contains multiple highly suspicious patterns (e.g., typosquatting or domain trickery). DO NOT CLICK IT. Its structure strongly suggests a phishing attempt. ";
+    } elseif (!empty($results)) {
+        $classification = "CLASSIFICATION: SUSPICIOUS 🟡";
+        $summary = "This link contains elements often associated with scams (e.g., shortener usage or urgency keywords). Treat it with extreme caution and verify the source manually.";
+    } else {
+        $classification = "CLASSIFICATION: LIKELY SAFE 🟢";
+        $summary = "No common phishing patterns were detected in the URL structure. However, this does not guarantee safety. Always verify the source.";
+    }
+    
+    $output = $classification . "\n\n" . $summary;
+    
+    if (!empty($results)) {
+        $output .= "\n\n**Detected Patterns:**\n" . implode("\n", $results);
+    }
+
+    return ["result" => $output];
 }
+
 
 // ------------------------
 //  Handle form submissions
@@ -110,7 +96,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $form_type = $_POST['form_type'] ?? '';
 
     if ($form_type === 'report_scam') {
-        // ---- Existing scam report form ----
+        // ---- Existing scam report form logic ----
         $scam_url      = $_POST['scam_url'];
         $scam_type     = $_POST['scam_type'];
         $how_received  = $_POST['how_received'];
@@ -133,13 +119,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $success_message = "Your scam report has been submitted!";
 
     } elseif ($form_type === 'link_check') {
-        // ---- New link checker form ----
+        // ---- CSV/Regex Link Checker logic ----
         $check_url = trim($_POST['check_url'] ?? '');
 
-        if ($check_url === '') {
+        if (empty($check_url)) {
             $link_check_error = "Please paste a URL to check.";
         } else {
-            $res = check_link_with_gemini($check_url);
+            // Call the function containing the Regex comparison
+            $res = check_link_with_csv($check_url);
+            
             if (isset($res['error'])) {
                 $link_check_error = $res['error'];
             } else {
