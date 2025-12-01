@@ -156,8 +156,8 @@ $results = $db->query("SELECT * FROM scam_reports ORDER BY id DESC");
         <!-- Header -->
         <header id="header">
             <a class="logo" href="index.html">
-                <img src="images/cysafe.png" alt="CySafe Portal" style="height: 48px;">
-            </a>
+    <img src="./images/cysafe.png" alt="CySafe Portal" class="logo" >
+</a>
             <nav>
                 <a href="#menu">Menu</a>
             </nav>
@@ -227,7 +227,7 @@ $results = $db->query("SELECT * FROM scam_reports ORDER BY id DESC");
         <p>Paste a link to check if it may be dangerous using Google Gemini AI.</p>
 
         <form method="POST" action="elements.php">
-            <input type="hidden" name="check_link" value="1">
+            <input type="hidden" name="form_type" value="link_check">
 
             <label for="check_url">Enter URL</label>
             <input type="text" name="check_url" id="check_url" placeholder="https://example.com" required />
